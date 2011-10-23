@@ -22,9 +22,9 @@
     <description>Generates HTML documentation from Spring Web Services REST endpoints</description>
 
     <groupId>org.versly</groupId>
-    <artifactId>versly-wsdoc</artifactId>
+    <artifactId>versly-wsdoc-anickell</artifactId>
     <packaging>jar</packaging>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0</version>
     <url>http://github.com/versly/wsdoc</url>
 
     <dependencies>
