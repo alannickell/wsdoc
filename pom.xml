@@ -119,7 +119,7 @@
   <scm>
     <url>https://github.com/alannickell/wsdoc</url>
     <connection>scm:git:git://github.com/alannickell/wsdoc.git</connection>
-    <developerConnection>scm:git:git@github.com:alannickell/wsdoc.git
+    <developerConnection>scm:git:git://git@github.com:alannickell/wsdoc.git
     </developerConnection>
   </scm>
 
