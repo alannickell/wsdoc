@@ -109,7 +109,7 @@
   </build>
   
   <scm>
-    <url>https://github.com/alannickell/wsdoc</url>
+    <url>scm:git:ssh://git@github.com:alannickell/wsdoc.git</url>
     <connection>scm:git:ssh://git@github.com:alannickell/wsdoc.git</connection>
     <developerConnection>scm:git:ssh://git@github.com:alannickell/wsdoc.git
     </developerConnection>
