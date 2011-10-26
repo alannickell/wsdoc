@@ -17,6 +17,7 @@
 package org.versly.rest.wsdoc;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.net.URL;
 import java.sql.Timestamp;
 import java.util.*;
@@ -58,6 +59,7 @@ public class JsonPrimitive implements JsonType, Serializable {
         _primitiveTypeNamesByJavaTypeName.put(java.sql.Time.class.getName(), "time");
         _primitiveTypeNamesByJavaTypeName.put(Timestamp.class.getName(), "timestamp");
         _primitiveTypeNamesByJavaTypeName.put(DateTime.class.getName(), "iso-8610 timestamp string");
+        _primitiveTypeNamesByJavaTypeName.put(BigDecimal.class.getName(), "bigdecimal");
     }
 
     private String typeName;

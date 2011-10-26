@@ -20,9 +20,12 @@
     <head>
         <title>REST Endpoint Documentation</title>
         <style type="text/css">
+            span.resource-summary-method { font-weight: bold; }
+            a.resource-summary-path { font-weight: bold; }
             div.section-title { font-size: 18px; font-weight: bold; }
             div.resource-summary { font-family: monospace; padding-top: 10px; }
             .resource-summary div { padding-left: 15px }
+            div.resource-summary-docs { border: 1px dotted #999; margin: 5px 15px; padding: 5px; background-color: #EEE; width:60%; font-family: sans-serif; font-size: 0.8em; }
 
             div.resource { border-top: 1px solid gray; padding-top: 5px; margin-top: 15px; }
             div.resource-header { font-family: monospace; font-size: 18px; font-weight: bold; padding-bottom: 15px; }
@@ -53,10 +56,14 @@
         <#list docs as doc>
             <#list doc.resources as resource>
                 <div class="resource-summary">
-                    <span class="resource-summary-path">${resource.path}</span>
                     <div>
                         <#list resource.requestMethodDocs?sort_by("requestMethod") as methodDoc>
-                            <a href="#${methodDoc.key}">${methodDoc.requestMethod}</a>
+                            <span class="resource-summary-method">${methodDoc.requestMethod}</span>  <a href="#${methodDoc.key}" class="resource-summary-path">${resource.path}</a>
+                            <#if (methodDoc.commentText??)>
+                                <div class="resource-summary-docs">
+                                    ${methodDoc.commentText}
+                                </div>
+                            </#if>
                         </#list>
                     </div>
                 </div>
