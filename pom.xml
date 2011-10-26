@@ -107,6 +107,12 @@
       </plugin>
     </plugins>
   </build>
-
+  
+  <scm>
+    <url>https://github.com/alannickell/wsdoc</url>
+    <connection>scm:git:ssh://git@github.com:alannickell/wsdoc.git</connection>
+    <developerConnection>scm:git:ssh://git@github.com:alannickell/wsdoc.git
+    </developerConnection>
+  </scm>
 
 </project>
