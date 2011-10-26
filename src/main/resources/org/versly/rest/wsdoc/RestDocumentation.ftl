@@ -25,7 +25,7 @@
             div.section-title { font-size: 18px; font-weight: bold; }
             div.resource-summary { font-family: monospace; padding-top: 10px; }
             .resource-summary div { padding-left: 15px }
-            div.resource-summary-docs { border: 1px dotted #999; margin: 5px 15px; padding: 5px; background-color: #EEE; width:60%; font-family: sans-serif; font-size: 0.8em; }
+            div.resource-summary-docs { margin-top: 5px; width:60%; font-family: monospace; font-size: 0.9em; color: gray }
 
             div.resource { border-top: 1px solid gray; padding-top: 5px; margin-top: 15px; }
             div.resource-header { font-family: monospace; font-size: 18px; font-weight: bold; padding-bottom: 15px; }
