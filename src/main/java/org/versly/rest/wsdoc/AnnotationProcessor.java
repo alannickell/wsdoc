@@ -16,6 +16,8 @@
 
 package org.versly.rest.wsdoc;
 
+import org.apache.commons.lang.StringUtils;
+import org.apache.ecs.html.*;
 import org.codehaus.jackson.annotate.JsonIgnore;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -35,6 +37,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.*;
+import java.util.Map;
 
 /**
  * Generates an HTML documentation file describing the REST / JSON endpoints as defined with the
@@ -114,16 +117,278 @@ public class AnnotationProcessor extends AbstractProcessor {
 
         RestDocumentation.Resource.Method doc = _docs.getResourceDocumentation(path).newMethodDocumentation(meth);
         String docComment = processingEnv.getElementUtils().getDocComment(executableElement);
-        doc.setCommentText(processJavaDoc(docComment));
+        if (StringUtils.isNotBlank(docComment)) {
+            MethodStructure methodStructure = generateMethodStructure(docComment);
+            doc.setCommentText(generateJavaDocHTML(methodStructure));
+            doc.setCommentSummary(methodStructure.getDescription());
+        }
         buildParameterData(executableElement, doc);
         buildResponseFormat(executableElement.getReturnType(), doc);
     }
 
-    private static final String processJavaDoc(String docComment) {
-//        if (docComment != null) {
-//            docComment = docComment.replaceAll("@param", "<br/>@param");
-//        }
-        return docComment;
+    private static MethodStructure generateMethodStructure(String docComment) {
+        MethodStructure methodStructure = new MethodStructure();
+
+        parseNameDescriptionObj(docComment, 0, methodStructure, "@param", new ParseProcessor() {
+            @Override public void processEntry(MethodStructure methodStructure, String... args) {
+                methodStructure.addParam(args[0], args[1]);
+            }
+        });
+        parseNameDescriptionObj(docComment, 0, methodStructure, "@throws", new ParseProcessor() {
+            @Override public void processEntry(MethodStructure methodStructure, String... args) {
+                methodStructure.addException(args[0], args[1]);
+            }
+        });
+        parseValueObj(docComment, methodStructure, "@return", new ParseProcessor() {
+            @Override public void processEntry(MethodStructure methodStructure, String... args) {
+                methodStructure.setReturns(args[0]);
+            }
+        });
+        parseValueObj(docComment, methodStructure, "@deprecated", new ParseProcessor() {
+            @Override public void processEntry(MethodStructure methodStructure, String... args) {
+                if (args[0] != null && !args[0].isEmpty()) {
+                    methodStructure.setDeprecated(true);
+                    methodStructure.setDeprecatedMessage(args[0]);
+                }
+            }
+        });
+        parseValueObj(docComment, methodStructure, "@since", new ParseProcessor() {
+            @Override public void processEntry(MethodStructure methodStructure, String... args) {
+                methodStructure.setSince(args[0]);
+            }
+        });
+        parseValueObj(docComment, methodStructure, "@see", new ParseProcessor() {
+            @Override public void processEntry(MethodStructure methodStructure, String... args) {
+                methodStructure.setSeeAlso(args[0]);
+            }
+        });
+        methodStructure.setDescription(docComment.substring(0, (docComment.indexOf("@") != -1 ? docComment.indexOf("@") : docComment.length())));
+        return methodStructure;
+    }
+
+    private static String generateJavaDocHTML(MethodStructure methodStructure) {
+        DL dl = new DL();
+
+        //
+        // Deprecated
+        //
+        if (methodStructure.isDeprecated()) {
+            DD deprecatedDD = new DD();
+
+            B b = new B("Deprecated. ");
+            deprecatedDD.addElement(b);
+
+            I i = new I(methodStructure.getDeprecatedMessage());
+            deprecatedDD.addElement(i);
+            deprecatedDD.addElement(new P());
+
+            dl.addElement(deprecatedDD);
+        }
+
+        //
+        // Description
+        //
+        DD descriptionDD = new DD();
+        P descriptionP = new P(methodStructure.getDescription(), "");
+        descriptionDD.addElement(descriptionP);
+        descriptionDD.addElement(new P());
+        dl.addElement(descriptionDD);
+
+        DD extraInfoDD = new DD();
+        DL extraInfoDL = new DL();
+        extraInfoDD.addElement(extraInfoDL);
+
+        //
+        // Params
+        //
+        if (!methodStructure.getParams().isEmpty()) {
+            DT dt = new DT();
+            dt.addElement(new B("Parameters:"));
+            extraInfoDL.addElement(dt);
+            for (Map.Entry<String, String> paramMap : methodStructure.getParams().entrySet()) {
+                DD paramDD = new DD();
+                Code paramName = new Code(paramMap.getKey());
+                paramDD.addElement(paramName);
+                paramDD.addElement(" - " + paramMap.getValue());
+                extraInfoDL.addElement(paramDD);
+            }
+        }
+
+        //
+        // Returns
+        //
+        if (StringUtils.isNotBlank(methodStructure.getReturns())) {
+            DT dt = new DT();
+            dt.addElement(new B("Returns:"));
+            extraInfoDL.addElement(dt);
+            extraInfoDL.addElement(new DD(methodStructure.getReturns()));
+        }
+
+        //
+        // Throws
+        //
+        if (!methodStructure.getExceptions().isEmpty()) {
+            DT dt = new DT();
+            dt.addElement(new B("Throws:"));
+            extraInfoDL.addElement(dt);
+            for (Map.Entry<String, String> exceptionMap : methodStructure.getExceptions().entrySet()) {
+                DD exceptionDD = new DD();
+                Code exceptionName = new Code(exceptionMap.getKey());
+                exceptionDD.addElement(exceptionName);
+                exceptionDD.addElement(" - " + exceptionMap.getValue());
+                extraInfoDL.addElement(exceptionDD);
+            }
+        }
+
+        //
+        // Since
+        //
+        if (StringUtils.isNotBlank(methodStructure.getSince())) {
+            DT dt = new DT();
+            dt.addElement(new B("Since:"));
+            extraInfoDL.addElement(dt);
+            extraInfoDL.addElement(new DD(methodStructure.getSince()));
+        }
+
+        //
+        // See
+        //
+        if (StringUtils.isNotBlank(methodStructure.getSeeAlso())) {
+            DT dt = new DT();
+            dt.addElement(new B("See Also:"));
+            extraInfoDL.addElement(dt);
+            extraInfoDL.addElement(new DD(methodStructure.getSeeAlso()));
+        }
+
+        dl.addElement(extraInfoDD);
+
+        return dl.toString();
+    }
+
+    private static interface ParseProcessor {
+        void processEntry(MethodStructure methodStructure, String... args);
+    }
+
+    private static void parseNameDescriptionObj(String docComment, int startIdx, MethodStructure methodStructure, String annotation, ParseProcessor processor) {
+        int annotationBegin = docComment.indexOf(annotation, startIdx);
+        if (annotationBegin == -1) {
+            return;
+        }
+        int nameStart = docComment.indexOf(" ", annotationBegin) + 1;
+        int nameEnd = docComment.indexOf(" ", nameStart);
+        if (nameEnd > nameStart) {
+            String name = docComment.substring(nameStart, nameEnd);
+
+            int descriptionEnd = docComment.indexOf("@", nameEnd) - 1;
+
+            String description = "";
+            if (descriptionEnd > nameEnd) {
+                description = docComment.substring(nameEnd + 1, descriptionEnd);
+            }
+
+            processor.processEntry(methodStructure, name, description);
+
+            if (descriptionEnd > 0) {
+                parseNameDescriptionObj(docComment, descriptionEnd, methodStructure, annotation, processor);
+            }
+        }
+    }
+
+    private static void parseValueObj(String docComment, MethodStructure methodStructure, String annotation, ParseProcessor processor) {
+        int annotationBegin = docComment.indexOf(annotation);
+        if (annotationBegin == -1) {
+            return;
+        }
+        int valStart = annotationBegin + annotation.length() + 1;
+        int valEnd = docComment.indexOf("@", valStart);
+        if (valEnd == -1) {
+            valEnd = docComment.length();
+        }
+        if (valEnd > valStart) {
+            String val = docComment.substring(valStart, valEnd);
+
+            processor.processEntry(methodStructure, val);
+        }
+    }
+
+    private static final class MethodStructure {
+        private Map<String, String> params;
+        private String returns;
+        private String since;
+        private Map<String, String> exceptions;
+        private String seeAlso;
+        private boolean deprecated;
+        private String deprecatedMessage;
+        private String description;
+
+        private MethodStructure() {
+            this.params = new HashMap<String, String>();
+            this.exceptions = new HashMap<String, String>();
+        }
+
+        public Map<String, String> getParams() {
+            return params;
+        }
+
+        public void addParam(String name, String description) {
+            this.params.put(name, description);
+        }
+
+        public String getReturns() {
+            return returns;
+        }
+
+        public void setReturns(String returns) {
+            this.returns = returns;
+        }
+
+        public String getSince() {
+            return since;
+        }
+
+        public void setSince(String since) {
+            this.since = since;
+        }
+
+        public Map<String, String> getExceptions() {
+            return exceptions;
+        }
+
+        public void addException(String name, String description) {
+            this.exceptions.put(name, description);
+        }
+
+        public String getSeeAlso() {
+            return seeAlso;
+        }
+
+        public void setSeeAlso(String seeAlso) {
+            this.seeAlso = seeAlso;
+        }
+
+        public boolean isDeprecated() {
+            return deprecated;
+        }
+
+        public void setDeprecated(boolean deprecated) {
+            this.deprecated = deprecated;
+        }
+
+        public String getDescription() {
+            return description;
+        }
+
+        public void setDescription(String description) {
+            this.description = description;
+        }
+
+        public String getDeprecatedMessage() {
+            return deprecatedMessage;
+        }
+
+        public void setDeprecatedMessage(String deprecatedMessage) {
+            this.deprecatedMessage = deprecatedMessage;
+        }
     }
 
     private void buildParameterData(ExecutableElement executableElement, RestDocumentation.Resource.Method doc) {

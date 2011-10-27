@@ -99,6 +99,7 @@ public class RestDocumentation implements Serializable {
             private UrlFields _urlParameters = new UrlFields();
             private JsonType _responseBody;
             private String _commentText;
+            private String _commentSummary;
             private boolean _isMultipartRequest;
 
             public Method(RequestMethod meth) {
@@ -139,6 +140,14 @@ public class RestDocumentation implements Serializable {
 
             public void setCommentText(String text) {
                 _commentText = text;
+            }
+
+            public String getCommentSummary() {
+                return _commentSummary;
+            }
+
+            public void setCommentSummary(String summary) {
+                this._commentSummary = summary;
             }
 
             public boolean isMultipartRequest() {

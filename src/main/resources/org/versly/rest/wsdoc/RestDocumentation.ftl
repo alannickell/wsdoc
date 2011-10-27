@@ -59,9 +59,9 @@
                     <div>
                         <#list resource.requestMethodDocs?sort_by("requestMethod") as methodDoc>
                             <span class="resource-summary-method">${methodDoc.requestMethod}</span>  <a href="#${methodDoc.key}" class="resource-summary-path">${resource.path}</a>
-                            <#if (methodDoc.commentText??)>
+                            <#if (methodDoc.commentSummary??)>
                                 <div class="resource-summary-docs">
-                                    ${methodDoc.commentText}
+                                    ${methodDoc.commentSummary}
                                 </div>
                             </#if>
                         </#list>

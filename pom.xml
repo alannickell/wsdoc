@@ -24,7 +24,7 @@
   <groupId>org.versly</groupId>
   <artifactId>versly-wsdoc</artifactId>
   <packaging>jar</packaging>
-  <version>1.1.amn</version>
+  <version>1.2.amn-SNAPSHOT</version>
   <url>http://github.com/versly/wsdoc</url>
 
   <properties>
@@ -91,6 +91,16 @@
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <version>4.8.2</version>
+    </dependency>
+    <dependency>
+      <groupId>ecs</groupId>
+      <artifactId>ecs</artifactId>
+      <version>1.4.2</version>
+    </dependency>
+    <dependency>
+      <groupId>commons-lang</groupId>
+      <artifactId>commons-lang</artifactId>
+      <version>2.6</version>
     </dependency>
   </dependencies>
 
